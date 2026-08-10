@@ -200,52 +200,51 @@ input[type="range"]::-webkit-slider-thumb {
     cursor: pointer;
 }
 
-/* ============ EXPOSURE SCREEN ============ */
+/* ========== EXPOSURE SCREEN ========== */
 #exposureScreen {
     z-index: 100;
     background: #000;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
 }
 #exposureCanvas {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
 }
-
+.exposure-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 101;
+}
 .phase-indicator {
-    position: fixed;
+    position: absolute;
     bottom: calc(16px + var(--safe-bottom));
     left: 16px;
     font-size: 13px;
     font-weight: 700;
     color: rgba(204,0,0,0.6);
-    z-index: 102;
+    pointer-events: auto;
     cursor: pointer;
-    display: none;
 }
-
-/* Кнопка выхода — крупная, внизу, видна только когда нужно */
 .btn-stop {
-    position: fixed;
-    bottom: calc(16px + var(--safe-bottom));
-    right: 16px;
-    padding: 12px 24px;
-    background: rgba(204,0,0,0.5);
+    position: absolute;
+    top: calc(12px + var(--safe-top));
+    right: 12px;
+    width: 44px; height: 44px;
+    background: rgba(204,0,0,0.4);
     color: #fff;
     border: none;
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 700;
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: 900;
     cursor: pointer;
-    z-index: 102;
+    pointer-events: auto;
     display: none;
 }
 .btn-stop:active { background: var(--red); }
 
-/* ============ MODAL ============ */
+/* ========== MODAL ========== */
 .modal {
     position: fixed;
     top: 0; left: 0;
@@ -262,8 +261,7 @@ input[type="range"]::-webkit-slider-thumb {
     background: #111;
     border: 1px solid rgba(204,0,0,0.2);
     border-radius: 16px;
-    width: 100%;
-    max-width: 500px;
+    width: 100%; max-width: 500px;
     max-height: 80vh;
     overflow-y: auto;
     padding: 20px;
@@ -299,20 +297,16 @@ input[type="range"]::-webkit-slider-thumb {
     background: rgba(255,255,255,0.04);
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s;
 }
 .preset-item:active { background: var(--red-bg); }
 .preset-name { font-size: 15px; color: var(--text); }
 .preset-time { font-size: 13px; color: var(--red-dim); margin-top: 2px; }
 .preset-delete {
-    background: none;
-    border: none;
+    background: none; border: none;
     color: rgba(255,0,0,0.4);
-    font-size: 18px;
-    cursor: pointer;
+    font-size: 18px; cursor: pointer;
     padding: 4px 8px;
 }
-.preset-delete:active { color: var(--red); }
 .preset-add-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .input {
     background: var(--gray);
@@ -335,7 +329,3 @@ input[type="range"]::-webkit-slider-thumb {
     .controls { width: 340px; overflow-y: auto; padding: 8px 16px 8px 0; }
     .time-display { font-size: 32px; }
 }
-
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.3); border-radius: 2px; }
