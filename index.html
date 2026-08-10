@@ -51,9 +51,9 @@
                 <label class="label">ВРЕМЯ ЭКСПОНИРОВАНИЯ</label>
                 <div class="time-display" id="timeDisplay">10.0 сек</div>
                 <div class="time-buttons">
-                    <button class="btn-time" data-delta="-5">−5</button>
-                    <button class="btn-time" data-delta="-1">−1</button>
-                    <button class="btn-time" data-delta="-0.5">−0.5</button>
+                    <button class="btn-time" data-delta="-5">-5</button>
+                    <button class="btn-time" data-delta="-1">-1</button>
+                    <button class="btn-time" data-delta="-0.5">-0.5</button>
                     <button class="btn-time" data-delta="0.5">+0.5</button>
                     <button class="btn-time" data-delta="1">+1</button>
                     <button class="btn-time" data-delta="5">+5</button>
@@ -68,8 +68,10 @@
 
     <div id="exposureScreen" class="screen">
         <canvas id="exposureCanvas"></canvas>
-        <div id="phaseIndicator" class="phase-indicator">● ПОДГОТОВКА</div>
-        <button id="btnStop" class="btn-stop">✕ ВЫХОД</button>
+        <div class="exposure-overlay">
+            <div id="phaseIndicator" class="phase-indicator"></div>
+            <button id="btnStop" class="btn-stop">✕</button>
+        </div>
     </div>
 
     <div id="presetModal" class="modal">
