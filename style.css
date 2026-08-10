@@ -15,7 +15,6 @@
     --dark: #0a0a0a;
     --gray: #1a1a1a;
     --text: #ffffff;
-    --text-dim: rgba(255, 255, 255, 0.4);
     --safe-top: env(safe-area-inset-top);
     --safe-bottom: env(safe-area-inset-bottom);
 }
@@ -29,47 +28,38 @@ html, body {
     font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
 }
 
-/* ============ SCREENS ============ */
 .screen {
     position: fixed;
     top: 0; left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     display: none;
     flex-direction: column;
     background: var(--dark);
     z-index: 1;
 }
+.screen.active { display: flex; }
 
-.screen.active {
-    display: flex;
-}
-
-/* ============ MAIN SCREEN ============ */
 .header {
     text-align: center;
     padding: calc(12px + var(--safe-top)) 16px 8px;
 }
-
 .header h1 {
     font-size: 22px;
     color: var(--red);
     font-weight: 900;
     letter-spacing: 2px;
 }
-
 .subtitle {
     color: var(--red-dim);
     font-size: 12px;
     margin-top: 2px;
 }
 
-/* Preview */
 .preview-container {
     flex: 1;
     margin: 8px 16px;
     border-radius: 12px;
-    border: 1px solid rgba(204, 0, 0, 0.2);
+    border: 1px solid rgba(204,0,0,0.2);
     background: var(--gray);
     display: flex;
     align-items: center;
@@ -79,29 +69,22 @@ html, body {
     max-height: 40vh;
     cursor: pointer;
 }
-
 .preview-placeholder {
     text-align: center;
     color: var(--red-dim);
 }
-
 .preview-icon {
     font-size: 48px;
     margin-bottom: 8px;
     opacity: 0.4;
 }
-
-.preview-placeholder p {
-    font-size: 14px;
-}
-
+.preview-placeholder p { font-size: 14px; }
 #previewCanvas {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
 }
 
-/* Controls */
 .controls {
     padding: 8px 16px calc(12px + var(--safe-bottom));
     display: flex;
@@ -110,74 +93,55 @@ html, body {
     overflow-y: auto;
 }
 
-/* ============ OPTIONS ROW ============ */
 .options-row {
     display: flex;
     gap: 12px;
     justify-content: center;
     flex-wrap: wrap;
 }
-
 .option-toggle {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 10px 14px;
     background: var(--gray);
-    border: 1px solid rgba(204, 0, 0, 0.2);
+    border: 1px solid rgba(204,0,0,0.2);
     border-radius: 10px;
     cursor: pointer;
     transition: border-color 0.2s;
     flex: 1;
     min-width: 140px;
 }
-
 .option-toggle span {
     font-size: 13px;
     font-weight: 600;
     color: var(--red-dim);
     transition: color 0.2s;
 }
-
-.option-toggle.active {
-    border-color: var(--red);
-}
-
-.option-toggle.active span {
-    color: var(--red);
-}
-
+.option-toggle.active { border-color: var(--red); }
+.option-toggle.active span { color: var(--red); }
 .toggle-switch {
-    width: 44px;
-    height: 26px;
-    background: rgba(255, 255, 255, 0.1);
+    width: 44px; height: 26px;
+    background: rgba(255,255,255,0.1);
     border-radius: 13px;
     position: relative;
     transition: background 0.3s;
     flex-shrink: 0;
 }
-
 .toggle-switch .toggle-knob {
-    width: 22px;
-    height: 22px;
+    width: 22px; height: 22px;
     background: #555;
     border-radius: 50%;
     position: absolute;
-    top: 2px;
-    left: 2px;
+    top: 2px; left: 2px;
     transition: transform 0.3s, background 0.3s;
 }
-
-.option-toggle.active .toggle-switch {
-    background: rgba(204, 0, 0, 0.35);
-}
-
+.option-toggle.active .toggle-switch { background: rgba(204,0,0,0.35); }
 .option-toggle.active .toggle-switch .toggle-knob {
     transform: translateX(18px);
     background: var(--red);
 }
 
-/* Buttons */
 .btn {
     display: flex;
     align-items: center;
@@ -192,65 +156,22 @@ html, body {
     cursor: pointer;
     transition: opacity 0.2s, transform 0.1s;
 }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.35; pointer-events: none; }
+.btn-primary { background: var(--red); color: #000; font-size: 18px; padding: 16px; }
+.btn-secondary { background: var(--red); color: #000; }
+.btn-outline { background: var(--red-bg); color: var(--red); border: 1px solid rgba(204,0,0,0.25); }
 
-.btn:active {
-    transform: scale(0.97);
-}
-
-.btn:disabled {
-    opacity: 0.35;
-    pointer-events: none;
-}
-
-.btn-primary {
-    background: var(--red);
-    color: #000;
-    font-size: 18px;
-    padding: 16px;
-}
-
-.btn-secondary {
-    background: var(--red);
-    color: #000;
-}
-
-.btn-outline {
-    background: var(--red-bg);
-    color: var(--red);
-    border: 1px solid rgba(204, 0, 0, 0.25);
-}
-
-/* Time control */
 .time-control {
     background: var(--gray);
-    border: 1px solid rgba(204, 0, 0, 0.2);
+    border: 1px solid rgba(204,0,0,0.2);
     border-radius: 12px;
     padding: 12px;
     text-align: center;
 }
-
-.label {
-    font-size: 11px;
-    color: var(--red-dim);
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-.time-display {
-    font-size: 42px;
-    font-weight: 900;
-    color: var(--red);
-    margin: 4px 0 8px;
-}
-
-.time-buttons {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-}
-
+.label { font-size: 11px; color: var(--red-dim); font-weight: 700; letter-spacing: 1px; }
+.time-display { font-size: 42px; font-weight: 900; color: var(--red); margin: 4px 0 8px; }
+.time-buttons { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
 .btn-time {
     background: var(--red-bg);
     color: var(--red);
@@ -262,27 +183,18 @@ html, body {
     font-weight: 700;
     cursor: pointer;
 }
-
-.btn-time:active {
-    background: var(--red);
-    color: #000;
-}
+.btn-time:active { background: var(--red); color: #000; }
 
 input[type="range"] {
     -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 4px;
-    background: rgba(204, 0, 0, 0.25);
+    width: 100%; height: 4px;
+    background: rgba(204,0,0,0.25);
     border-radius: 2px;
     outline: none;
 }
-
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    appearance: none;
-    width: 24px;
-    height: 24px;
+    width: 24px; height: 24px;
     background: var(--red);
     border-radius: 50%;
     cursor: pointer;
@@ -292,85 +204,63 @@ input[type="range"]::-webkit-slider-thumb {
 #exposureScreen {
     z-index: 100;
     background: #000;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
 }
-
 #exposureCanvas {
     position: absolute;
     top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.exposure-overlay {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 101;
-}
-
-/* Кнопка закрытия — скрыта по умолчанию */
-.btn-close {
-    position: absolute;
-    top: calc(12px + var(--safe-top));
-    right: 12px;
-    width: 40px;
-    height: 40px;
-    background: rgba(204, 0, 0, 0.35);
-    color: #000;
-    border: none;
-    border-radius: 50%;
-    font-size: 20px;
-    font-weight: 900;
-    cursor: pointer;
-    pointer-events: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.3s;
-}
-
-.btn-close.hidden {
-    opacity: 0;
-    pointer-events: none;
+    width: 100%; height: 100%;
 }
 
 .phase-indicator {
-    position: absolute;
+    position: fixed;
     bottom: calc(16px + var(--safe-bottom));
     left: 16px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
-    color: rgba(204, 0, 0, 0.45);
-    pointer-events: auto;
+    color: rgba(204,0,0,0.6);
+    z-index: 102;
     cursor: pointer;
-}
-
-.phase-indicator.hidden {
     display: none;
 }
+
+/* Кнопка выхода — крупная, внизу, видна только когда нужно */
+.btn-stop {
+    position: fixed;
+    bottom: calc(16px + var(--safe-bottom));
+    right: 16px;
+    padding: 12px 24px;
+    background: rgba(204,0,0,0.5);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 102;
+    display: none;
+}
+.btn-stop:active { background: var(--red); }
 
 /* ============ MODAL ============ */
 .modal {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0,0,0,0.85);
     z-index: 200;
     display: none;
     align-items: center;
     justify-content: center;
     padding: 20px;
 }
-
-.modal.active {
-    display: flex;
-}
-
+.modal.active { display: flex; }
 .modal-content {
     background: #111;
-    border: 1px solid rgba(204, 0, 0, 0.2);
+    border: 1px solid rgba(204,0,0,0.2);
     border-radius: 16px;
     width: 100%;
     max-width: 500px;
@@ -378,19 +268,13 @@ input[type="range"]::-webkit-slider-thumb {
     overflow-y: auto;
     padding: 20px;
 }
-
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
 }
-
-.modal-header h2 {
-    color: var(--red);
-    font-size: 20px;
-}
-
+.modal-header h2 { color: var(--red); font-size: 20px; }
 .btn-close-modal {
     width: 32px; height: 32px;
     background: var(--red-bg);
@@ -404,70 +288,35 @@ input[type="range"]::-webkit-slider-thumb {
     align-items: center;
     justify-content: center;
 }
-
-.preset-save {
-    margin-bottom: 12px;
-}
-
-.preset-save .btn {
-    width: 100%;
-}
-
-.preset-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
+.preset-save { margin-bottom: 12px; }
+.preset-save .btn { width: 100%; }
+.preset-list { display: flex; flex-direction: column; gap: 6px; }
 .preset-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 12px;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255,255,255,0.04);
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s;
 }
-
-.preset-item:active {
-    background: var(--red-bg);
-}
-
-.preset-name {
-    font-size: 15px;
-    color: var(--text);
-}
-
-.preset-time {
-    font-size: 13px;
-    color: var(--red-dim);
-    margin-top: 2px;
-}
-
+.preset-item:active { background: var(--red-bg); }
+.preset-name { font-size: 15px; color: var(--text); }
+.preset-time { font-size: 13px; color: var(--red-dim); margin-top: 2px; }
 .preset-delete {
     background: none;
     border: none;
-    color: rgba(255, 0, 0, 0.4);
+    color: rgba(255,0,0,0.4);
     font-size: 18px;
     cursor: pointer;
     padding: 4px 8px;
 }
-
-.preset-delete:active {
-    color: var(--red);
-}
-
-.preset-add-form {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
+.preset-delete:active { color: var(--red); }
+.preset-add-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .input {
     background: var(--gray);
-    border: 1px solid rgba(204, 0, 0, 0.2);
+    border: 1px solid rgba(204,0,0,0.2);
     border-radius: 8px;
     padding: 12px;
     color: var(--text);
@@ -475,42 +324,18 @@ input[type="range"]::-webkit-slider-thumb {
     font-size: 15px;
     outline: none;
 }
-
-.input:focus {
-    border-color: var(--red);
-}
-
-.form-row {
-    display: flex;
-    gap: 8px;
-}
-
-.form-row .btn {
-    flex: 1;
-}
+.input:focus { border-color: var(--red); }
+.form-row { display: flex; gap: 8px; }
+.form-row .btn { flex: 1; }
 
 @media (orientation: landscape) {
-    #mainScreen {
-        flex-direction: row;
-    }
-    .header {
-        display: none;
-    }
-    .preview-container {
-        flex: 1;
-        max-height: none;
-        margin: 8px;
-    }
-    .controls {
-        width: 340px;
-        overflow-y: auto;
-        padding: 8px 16px 8px 0;
-    }
-    .time-display {
-        font-size: 32px;
-    }
+    #mainScreen { flex-direction: row; }
+    .header { display: none; }
+    .preview-container { flex: 1; max-height: none; margin: 8px; }
+    .controls { width: 340px; overflow-y: auto; padding: 8px 16px 8px 0; }
+    .time-display { font-size: 32px; }
 }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(204, 0, 0, 0.3); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.3); border-radius: 2px; }
