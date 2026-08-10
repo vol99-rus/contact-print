@@ -1,4 +1,4 @@
-var CACHE_NAME = 'contactprint-v3'; // ← меняйте число при каждом обновлении
+var CACHE_NAME = 'contactprint-v4'; // ← меняйте число при каждом обновлении
 
 var URLS_TO_CACHE = [
     './',
