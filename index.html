@@ -35,7 +35,6 @@
                 📷 Загрузить фото
             </button>
 
-            <!-- НОВЫЕ ОПЦИИ -->
             <div class="options-row">
                 <div class="option-toggle" id="optionBW">
                     <div class="toggle-switch" id="toggleBW">
@@ -50,7 +49,7 @@
                     <span>Заполнить экран</span>
                 </div>
             </div>
-            
+
             <div class="time-control">
                 <label class="label">ВРЕМЯ ЭКСПОНИРОВАНИЯ</label>
                 <div class="time-display" id="timeDisplay">10.0 сек</div>
@@ -78,9 +77,9 @@
     <!-- ============ ЭКРАН ЭКСПОНИРОВАНИЯ ============ -->
     <div id="exposureScreen" class="screen">
         <canvas id="exposureCanvas"></canvas>
-        <div class="exposure-overlay">
+        <div class="exposure-overlay" id="exposureOverlay">
             <div class="phase-indicator" id="phaseIndicator">● ПОДГОТОВКА</div>
-            <button class="btn-close" id="btnStop">✕</button>
+            <button class="btn-close hidden" id="btnStop">✕</button>
         </div>
     </div>
 
