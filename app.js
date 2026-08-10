@@ -81,16 +81,16 @@
     function playStartBeep() { playTone(1000, 0.25); }
     function playEndBeep() {
         playTone(880, 0.15);
-        setTimeout(function() { playTone(660, 0.4); }, 300);
+        setTimeout(function () { playTone(660, 0.4); }, 300);
     }
 
     // ======== WAKE LOCK ========
     function requestWakeLock() {
         try {
             if ('wakeLock' in navigator) {
-                navigator.wakeLock.request('screen').then(function(lock) {
+                navigator.wakeLock.request('screen').then(function (lock) {
                     state.wakeLock = lock;
-                });
+                }).catch(function () {});
             }
         } catch (e) {}
     }
@@ -166,7 +166,7 @@
 
     function renderPresets() {
         presetList.innerHTML = '';
-        state.presets.forEach(function(preset) {
+        state.presets.forEach(function (preset) {
             var item = document.createElement('div');
             item.className = 'preset-item';
             item.innerHTML =
@@ -174,16 +174,16 @@
                 '<div class="preset-time">' + formatTime(preset.time) + '</div></div>' +
                 '<button class="preset-delete" data-id="' + preset.id + '">🗑</button>';
 
-            item.addEventListener('click', function(e) {
+            item.addEventListener('click', function (e) {
                 if (e.target.classList.contains('preset-delete')) return;
                 state.exposureTime = preset.time;
                 updateTimeDisplay();
                 presetModal.classList.remove('active');
             });
 
-            item.querySelector('.preset-delete').addEventListener('click', function(e) {
+            item.querySelector('.preset-delete').addEventListener('click', function (e) {
                 e.stopPropagation();
-                state.presets = state.presets.filter(function(p) { return p.id !== preset.id; });
+                state.presets = state.presets.filter(function (p) { return p.id !== preset.id; });
                 savePresets();
                 renderPresets();
             });
@@ -215,7 +215,7 @@
         // Цветной негатив
         var invColorArr = new Uint8ClampedArray(d.length);
         for (var i = 0; i < d.length; i += 4) {
-            invColorArr[i]     = 255 - d[i];
+            invColorArr[i] = 255 - d[i];
             invColorArr[i + 1] = 255 - d[i + 1];
             invColorArr[i + 2] = 255 - d[i + 2];
             invColorArr[i + 3] = d[i + 3];
@@ -276,7 +276,7 @@
         previewPlaceholder.style.display = 'none';
     }
 
-    // ======== DRAW ON EXPOSURE CANVAS ========
+    // ======== DRAW EXPOSURE ========
     function imageDataToCanvas(data, w, h) {
         var c = document.createElement('canvas');
         c.width = w;
@@ -297,7 +297,6 @@
         canvas.style.width = sw + 'px';
         canvas.style.height = sh + 'px';
 
-        // Всегда чёрный фон
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -310,14 +309,49 @@
 
         var scale;
         if (state.fillMode) {
-            // Cover — заполнить весь экран
             scale = Math.max(cw / iw, ch / ih);
         } else {
-            // Contain — вписать целиком
             scale = Math.min(cw / iw, ch / ih);
         }
 
         var drawW = iw * scale;
         var drawH = ih * scale;
         var offsetX = (cw - drawW) / 2;
-        var offset
+        var offsetY = (ch - drawH) / 2;
+
+        ctx.drawImage(tmpCanvas, offsetX, offsetY, drawW, drawH);
+    }
+
+    // ======== EXPOSURE PROCESS ========
+    function showStopButton() {
+        btnStop.style.display = 'block';
+    }
+
+    function hideStopButton() {
+        btnStop.style.display = 'none';
+    }
+
+    function startExposure() {
+        if (!state.imageLoaded) return;
+        getAudioContext();
+
+        mainScreen.classList.remove('active');
+        exposureScreen.classList.add('active');
+
+        state.phase = 'waiting';
+        state.timeRemaining = state.waitTime;
+
+        phaseIndicator.textContent = '● ПОДГОТОВКА';
+        phaseIndicator.style.display = 'block';
+        phaseIndicator.onclick = null;
+
+        // Во время подготовки — показываем крестик
+        showStopButton();
+
+        drawExposureImage(state.redImageData);
+        document.body.style.background = '#000';
+
+        requestWakeLock();
+
+        state.timer = setInterval(function () {
+            state.
