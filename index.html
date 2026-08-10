@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ============ ГЛАВНЫЙ ЭКРАН ============ -->
     <div id="mainScreen" class="screen active">
         <div class="header">
             <h1>◉ CONTACT PRINT</h1>
@@ -31,22 +30,20 @@
         <input type="file" id="fileInput" accept="image/*" style="display:none;">
 
         <div class="controls">
-            <button class="btn btn-secondary" id="btnLoadPhoto">
-                📷 Загрузить фото
-            </button>
+            <button class="btn btn-secondary" id="btnLoadPhoto">📷 Загрузить фото</button>
 
             <div class="options-row">
                 <div class="option-toggle" id="optionBW">
-                    <div class="toggle-switch" id="toggleBW">
+                    <div class="toggle-switch">
                         <div class="toggle-knob"></div>
                     </div>
                     <span>Ч/Б негатив</span>
                 </div>
                 <div class="option-toggle" id="optionFill">
-                    <div class="toggle-switch" id="toggleFill">
+                    <div class="toggle-switch">
                         <div class="toggle-knob"></div>
                     </div>
-                    <span>Заполнить экран</span>
+                    <span>На весь экран</span>
                 </div>
             </div>
 
@@ -54,9 +51,9 @@
                 <label class="label">ВРЕМЯ ЭКСПОНИРОВАНИЯ</label>
                 <div class="time-display" id="timeDisplay">10.0 сек</div>
                 <div class="time-buttons">
-                    <button class="btn-time" data-delta="-5">-5</button>
-                    <button class="btn-time" data-delta="-1">-1</button>
-                    <button class="btn-time" data-delta="-0.5">-0.5</button>
+                    <button class="btn-time" data-delta="-5">−5</button>
+                    <button class="btn-time" data-delta="-1">−1</button>
+                    <button class="btn-time" data-delta="-0.5">−0.5</button>
                     <button class="btn-time" data-delta="0.5">+0.5</button>
                     <button class="btn-time" data-delta="1">+1</button>
                     <button class="btn-time" data-delta="5">+5</button>
@@ -64,41 +61,27 @@
                 <input type="range" id="timeSlider" min="0.5" max="600" step="0.5" value="10">
             </div>
 
-            <button class="btn btn-outline" id="btnPresets">
-                📋 Пресеты
-            </button>
-
-            <button class="btn btn-primary" id="btnStart" disabled>
-                ⚡ НАЧАТЬ ЭКСПОНИРОВАНИЕ
-            </button>
+            <button class="btn btn-outline" id="btnPresets">📋 Пресеты</button>
+            <button class="btn btn-primary" id="btnStart" disabled>⚡ НАЧАТЬ ЭКСПОНИРОВАНИЕ</button>
         </div>
     </div>
 
-    <!-- ============ ЭКРАН ЭКСПОНИРОВАНИЯ ============ -->
     <div id="exposureScreen" class="screen">
         <canvas id="exposureCanvas"></canvas>
-        <div class="exposure-overlay" id="exposureOverlay">
-            <div class="phase-indicator" id="phaseIndicator">● ПОДГОТОВКА</div>
-            <button class="btn-close hidden" id="btnStop">✕</button>
-        </div>
+        <div id="phaseIndicator" class="phase-indicator">● ПОДГОТОВКА</div>
+        <button id="btnStop" class="btn-stop">✕ ВЫХОД</button>
     </div>
 
-    <!-- ============ МОДАЛЬНОЕ ОКНО ПРЕСЕТОВ ============ -->
     <div id="presetModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Пресеты</h2>
                 <button class="btn-close-modal" id="btnClosePresets">✕</button>
             </div>
-
             <div class="preset-save">
-                <button class="btn btn-outline" id="btnSavePreset">
-                    ＋ Сохранить текущие настройки
-                </button>
+                <button class="btn btn-outline" id="btnSavePreset">＋ Сохранить текущие настройки</button>
             </div>
-
             <div class="preset-list" id="presetList"></div>
-
             <div class="preset-add-form" id="presetForm" style="display:none;">
                 <input type="text" id="presetNameInput" placeholder="Название пресета" class="input">
                 <div class="form-row">
