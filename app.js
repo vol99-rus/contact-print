@@ -3,6 +3,14 @@
 // v2: Ч/Б негатив + заполнение экрана
 // ============================================================
 
+// Вместо только кнопки — тап по всему экрану
+exposureScreen.addEventListener('click', function(e) {
+    // Не реагировать на тап по индикатору фазы
+    if (e.target === phaseIndicator) return;
+    
+    stopExposure();
+});
+
 (function () {
     'use strict';
 
