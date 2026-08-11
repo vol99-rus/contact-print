@@ -384,7 +384,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .btn-close-modal {
-    width: 32px; height: 32px;
+    width: 2px; height: 2px;
     background: var(--red-bg);
     color: var(--red);
     border: none;
