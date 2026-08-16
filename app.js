@@ -1,15 +1,7 @@
 // ============================================================
 // CONTACT PRINT — PWA для контактной фотопечати
-// v2: Ч/Б негатив + заполнение экрана
+// v3: Исправлена засветка красным фоном
 // ============================================================
-
-// Вместо только кнопки — тап по всему экрану
-exposureScreen.addEventListener('click', function(e) {
-    // Не реагировать на тап по индикатору фазы
-    if (e.target === phaseIndicator) return;
-    
-    stopExposure();
-});
 
 (function () {
     'use strict';
@@ -245,13 +237,14 @@ exposureScreen.addEventListener('click', function(e) {
             invBW.data[i + 2] = lum;
         }
 
-        // Красный негатив (для безопасного света)
+        // ★ ИСПРАВЛЕНО: Красный негатив — яркость снижена до 3%
+        // Было 0.55 — засвечивало бумагу
         const red = new ImageData(new Uint8ClampedArray(original.data), w, h);
         for (let i = 0; i < red.data.length; i += 4) {
             const lum = 0.299 * (255 - red.data[i]) +
                         0.587 * (255 - red.data[i + 1]) +
                         0.114 * (255 - red.data[i + 2]);
-            red.data[i]     = Math.round(lum * 0.55);
+            red.data[i]     = Math.round(lum * 0.03);  // ★ было 0.55
             red.data[i + 1] = 0;
             red.data[i + 2] = 0;
         }
@@ -268,16 +261,10 @@ exposureScreen.addEventListener('click', function(e) {
         btnStart.disabled = false;
     }
 
-    /**
-     * Возвращает нужный негатив в зависимости от режима Ч/Б
-     */
     function getActiveNegative() {
         return state.bwMode ? state.invertedBWImageData : state.invertedImageData;
     }
 
-    /**
-     * Обновляет превью на главном экране
-     */
     function updatePreview() {
         if (!state.imageLoaded) return;
         const imgData = getActiveNegative();
@@ -290,9 +277,6 @@ exposureScreen.addEventListener('click', function(e) {
 
     // ============ DRAW ON EXPOSURE CANVAS ============
 
-    /**
-     * Создаёт временный canvas из ImageData
-     */
     function imageDataToCanvas(imageData, w, h) {
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
@@ -300,18 +284,7 @@ exposureScreen.addEventListener('click', function(e) {
         return c;
     }
 
-    /**
-     * Рисует изображение на экране экспонирования
-     *
-     * bgColor — цвет фона (чёрный для красного, чёрный для негатива)
-     *
-     * fillMode:
-     *   false = contain (вписать, по краям чёрный)
-     *   true  = cover   (заполнить экран, обрезать края)
-     *
-     * ВАЖНО: фон всегда ЧЁРНЫЙ — никогда белый по краям
-     */
-    function drawExposureImage(imageData, bgColor) {
+    function drawExposureImage(imageData) {
         const canvas = exposureCanvas;
         const ctx = exposureCtx;
         const dpr = window.devicePixelRatio || 1;
@@ -324,7 +297,6 @@ exposureScreen.addEventListener('click', function(e) {
         canvas.style.width = screenW + 'px';
         canvas.style.height = screenH + 'px';
 
-        // Всегда чёрный фон — никакого белого по краям
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -337,10 +309,8 @@ exposureScreen.addEventListener('click', function(e) {
 
         let scale;
         if (state.fillMode) {
-            // Cover — заполняет весь экран, обрезая лишнее
             scale = Math.max(cw / iw, ch / ih);
         } else {
-            // Contain — вписывает, по краям чёрный
             scale = Math.min(cw / iw, ch / ih);
         }
 
@@ -352,11 +322,30 @@ exposureScreen.addEventListener('click', function(e) {
         ctx.drawImage(tmpCanvas, offsetX, offsetY, drawW, drawH);
     }
 
+    // ★ НОВАЯ ФУНКЦИЯ: полностью чёрный экран
+    function drawBlackScreen() {
+        const canvas = exposureCanvas;
+        const ctx = exposureCtx;
+        const dpr = window.devicePixelRatio || 1;
+
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+
+        canvas.width = screenW * dpr;
+        canvas.height = screenH * dpr;
+        canvas.style.width = screenW + 'px';
+        canvas.style.height = screenH + 'px';
+
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
     // ============ EXPOSURE PROCESS ============
 
     function startExposure() {
         if (!state.imageLoaded) return;
         getAudioContext();
+        tryFullscreen();
 
         mainScreen.classList.remove('active');
         exposureScreen.classList.add('active');
@@ -367,7 +356,9 @@ exposureScreen.addEventListener('click', function(e) {
         phaseIndicator.style.display = 'block';
         phaseIndicator.onclick = null;
 
-        drawExposureImage(state.redImageData, '#000000');
+        // ★ ИСПРАВЛЕНО: во время ожидания — ЧЁРНЫЙ экран, не красный!
+        // Бумага уже лежит под телефоном, любой свет = засветка
+        drawBlackScreen();
         document.body.style.background = '#000';
 
         requestWakeLock();
@@ -388,13 +379,11 @@ exposureScreen.addEventListener('click', function(e) {
         state.timeRemaining = state.exposureTime;
         playStartBeep();
 
-        // Рисуем негатив — фон ЧЁРНЫЙ, не белый
+        // Рисуем негатив — это единственный момент когда экран светит
         const neg = getActiveNegative();
-        drawExposureImage(neg, '#000000');
+        drawExposureImage(neg);
 
-        // НЕ ставим белый body — фон canvas чёрный, изображение само светит
         document.body.style.background = '#000';
-
         phaseIndicator.style.display = 'none';
     }
 
@@ -404,11 +393,14 @@ exposureScreen.addEventListener('click', function(e) {
         state.timer = null;
         playEndBeep();
 
-        drawExposureImage(state.redImageData, '#000000');
+        // ★ ИСПРАВЛЕНО: после экспонирования — ЧЁРНЫЙ экран, не красный!
+        // Бумага всё ещё под телефоном, красный свет = дополнительная засветка
+        drawBlackScreen();
         document.body.style.background = '#000';
 
         phaseIndicator.textContent = '● ГОТОВО — НАЖМИТЕ ДЛЯ ВЫХОДА';
         phaseIndicator.style.display = 'block';
+        phaseIndicator.style.color = '#00ff00';  // зелёный текст на чёрном фоне
         phaseIndicator.onclick = stopExposure;
     }
 
@@ -420,6 +412,7 @@ exposureScreen.addEventListener('click', function(e) {
         exposureScreen.classList.remove('active');
         mainScreen.classList.add('active');
         phaseIndicator.onclick = null;
+        phaseIndicator.style.color = '';  // сброс цвета
         releaseWakeLock();
         exitFullscreen();
     }
@@ -427,9 +420,10 @@ exposureScreen.addEventListener('click', function(e) {
     // ============ RESIZE ============
     function handleResize() {
         if (state.phase === 'waiting' || state.phase === 'finished') {
-            drawExposureImage(state.redImageData, '#000000');
+            // ★ ИСПРАВЛЕНО: при ожидании/завершении — чёрный
+            drawBlackScreen();
         } else if (state.phase === 'exposing') {
-            drawExposureImage(getActiveNegative(), '#000000');
+            drawExposureImage(getActiveNegative());
         }
     }
 
@@ -512,9 +506,16 @@ exposureScreen.addEventListener('click', function(e) {
             updateTimeDisplay();
         });
 
-        // Старт / Стоп
+        // Старт
         btnStart.addEventListener('click', startExposure);
-        btnStop.addEventListener('click', stopExposure);
+
+        // ★ ИСПРАВЛЕНО: тап по всему экрану экспонирования для остановки
+        // (вместо отдельной кнопки stop)
+        exposureScreen.addEventListener('click', function(e) {
+            if (e.target === phaseIndicator) return;
+            if (state.phase === 'idle') return;
+            stopExposure();
+        });
 
         // Пресеты
         btnPresets.addEventListener('click', () => {
