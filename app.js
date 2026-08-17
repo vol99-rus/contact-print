@@ -322,23 +322,31 @@
         ctx.drawImage(tmpCanvas, offsetX, offsetY, drawW, drawH);
     }
 
-    // ★ НОВАЯ ФУНКЦИЯ: полностью чёрный экран
-    function drawBlackScreen() {
+    // ★ Безопасный экран — тёмно-красный вместо чёрного
+    // Фотобумага (включая мультиконтрастную) нечувствительна к красному >600нм
+    // LCD подсветка при "чёрном" экране даёт утечку белого света — это засвечивает
+    // Тёмно-красный заливает экран красными субпикселями, блокируя синий и зелёный
+    
+    function drawSafeScreen() {
         const canvas = exposureCanvas;
         const ctx = exposureCtx;
         const dpr = window.devicePixelRatio || 1;
-
+    
         const screenW = window.innerWidth;
         const screenH = window.innerHeight;
-
+    
         canvas.width = screenW * dpr;
         canvas.height = screenH * dpr;
         canvas.style.width = screenW + 'px';
         canvas.style.height = screenH + 'px';
-
-        ctx.fillStyle = '#000000';
+    
+        // Тёмно-красный — безопасен для фотобумаги
+        // Значение 10-15 достаточно чтобы LCD включил красные субпиксели
+        // и погасил синие/зелёные, но не засвечивал бумагу
+        ctx.fillStyle = '#0a0000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+
 
     // ============ EXPOSURE PROCESS ============
 
