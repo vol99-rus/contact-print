@@ -1,6 +1,6 @@
 // ============================================================
 // CONTACT PRINT — PWA для контактной фотопечати
-// v3: Исправлена засветка красным фоном
+// v4: Безопасный красный экран вместо чёрного
 // ============================================================
 
 (function () {
@@ -82,7 +82,10 @@
         } catch (e) {}
     }
 
-    function playStartBeep() { playTone(1000, 0.25); }
+    function playStartBeep() {
+        playTone(1000, 0.25);
+    }
+
     function playEndBeep() {
         playTone(880, 0.15);
         setTimeout(() => playTone(660, 0.4), 300);
@@ -91,12 +94,19 @@
     // ============ WAKE LOCK ============
     async function requestWakeLock() {
         try {
-            if ('wakeLock' in navigator)
+            if ('wakeLock' in navigator) {
                 state.wakeLock = await navigator.wakeLock.request('screen');
+            }
         } catch (e) {}
     }
+
     function releaseWakeLock() {
-        try { if (state.wakeLock) { state.wakeLock.release(); state.wakeLock = null; } } catch (e) {}
+        try {
+            if (state.wakeLock) {
+                state.wakeLock.release();
+                state.wakeLock = null;
+            }
+        } catch (e) {}
     }
 
     // ============ FULLSCREEN ============
@@ -107,6 +117,7 @@
             else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
         } catch (e) {}
     }
+
     function exitFullscreen() {
         try {
             if (document.exitFullscreen) document.exitFullscreen();
@@ -157,15 +168,17 @@
     function loadPresets() {
         try {
             const s = localStorage.getItem('contactprint_presets');
-            state.presets = s ? JSON.parse(s) : DEFAULT_PRESETS.map(p => ({...p}));
+            state.presets = s ? JSON.parse(s) : DEFAULT_PRESETS.map((p) => ({ ...p }));
         } catch (e) {
-            state.presets = DEFAULT_PRESETS.map(p => ({...p}));
+            state.presets = DEFAULT_PRESETS.map((p) => ({ ...p }));
         }
         if (!localStorage.getItem('contactprint_presets')) savePresets();
     }
 
     function savePresets() {
-        try { localStorage.setItem('contactprint_presets', JSON.stringify(state.presets)); } catch (e) {}
+        try {
+            localStorage.setItem('contactprint_presets', JSON.stringify(state.presets));
+        } catch (e) {}
     }
 
     function renderPresets() {
@@ -173,31 +186,32 @@
         state.presets.forEach((preset) => {
             const item = document.createElement('div');
             item.className = 'preset-item';
-            item.innerHTML = `
-                <div>
-                    <div class="preset-name">${escapeHtml(preset.name)}</div>
-                    <div class="preset-time">${formatTime(preset.time)}</div>
-                </div>
-                <button class="preset-delete" data-id="${preset.id}">🗑</button>
-            `;
+            item.innerHTML =
+                '<div>' +
+                '<div class="preset-name">' + escapeHtml(preset.name) + '</div>' +
+                '<div class="preset-time">' + formatTime(preset.time) + '</div>' +
+                '</div>' +
+                '<button class="preset-delete" data-id="' + preset.id + '">🗑</button>';
+
             item.addEventListener('click', (e) => {
                 if (e.target.classList.contains('preset-delete')) return;
                 state.exposureTime = preset.time;
                 updateTimeDisplay();
                 presetModal.classList.remove('active');
             });
+
             item.querySelector('.preset-delete').addEventListener('click', (e) => {
                 e.stopPropagation();
-                state.presets = state.presets.filter(p => p.id !== preset.id);
+                state.presets = state.presets.filter((p) => p.id !== preset.id);
                 savePresets();
                 renderPresets();
             });
+
             presetList.appendChild(item);
         });
     }
 
     // ============ IMAGE PROCESSING ============
-
     function processImage(img) {
         const MAX = 2048;
         let w = img.naturalWidth || img.width;
@@ -210,7 +224,8 @@
         }
 
         const c = document.createElement('canvas');
-        c.width = w; c.height = h;
+        c.width = w;
+        c.height = h;
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
 
@@ -219,7 +234,7 @@
         // Цветной негатив
         const invColor = new ImageData(new Uint8ClampedArray(original.data), w, h);
         for (let i = 0; i < invColor.data.length; i += 4) {
-            invColor.data[i]     = 255 - invColor.data[i];
+            invColor.data[i] = 255 - invColor.data[i];
             invColor.data[i + 1] = 255 - invColor.data[i + 1];
             invColor.data[i + 2] = 255 - invColor.data[i + 2];
         }
@@ -232,19 +247,19 @@
                 0.587 * (255 - invBW.data[i + 1]) +
                 0.114 * (255 - invBW.data[i + 2])
             );
-            invBW.data[i]     = lum;
+            invBW.data[i] = lum;
             invBW.data[i + 1] = lum;
             invBW.data[i + 2] = lum;
         }
 
-        // ★ ИСПРАВЛЕНО: Красный негатив — яркость снижена до 3%
-        // Было 0.55 — засвечивало бумагу
+        // Красный негатив для превью — очень тусклый (3%)
         const red = new ImageData(new Uint8ClampedArray(original.data), w, h);
         for (let i = 0; i < red.data.length; i += 4) {
-            const lum = 0.299 * (255 - red.data[i]) +
-                        0.587 * (255 - red.data[i + 1]) +
-                        0.114 * (255 - red.data[i + 2]);
-            red.data[i]     = Math.round(lum * 0.03);  // ★ было 0.55
+            const lum =
+                0.299 * (255 - red.data[i]) +
+                0.587 * (255 - red.data[i + 1]) +
+                0.114 * (255 - red.data[i + 2]);
+            red.data[i] = Math.round(lum * 0.03);
             red.data[i + 1] = 0;
             red.data[i + 2] = 0;
         }
@@ -276,10 +291,10 @@
     }
 
     // ============ DRAW ON EXPOSURE CANVAS ============
-
     function imageDataToCanvas(imageData, w, h) {
         const c = document.createElement('canvas');
-        c.width = w; c.height = h;
+        c.width = w;
+        c.height = h;
         c.getContext('2d').putImageData(imageData, 0, 0);
         return c;
     }
@@ -297,7 +312,8 @@
         canvas.style.width = screenW + 'px';
         canvas.style.height = screenH + 'px';
 
-        ctx.fillStyle = '#000000';
+        // Фон вокруг изображения — безопасный красный
+        ctx.fillStyle = '#0a0000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const tmpCanvas = imageDataToCanvas(imageData, state.imageWidth, state.imageHeight);
@@ -322,34 +338,28 @@
         ctx.drawImage(tmpCanvas, offsetX, offsetY, drawW, drawH);
     }
 
-    // ★ Безопасный экран — тёмно-красный вместо чёрного
-    // Фотобумага (включая мультиконтрастную) нечувствительна к красному >600нм
-    // LCD подсветка при "чёрном" экране даёт утечку белого света — это засвечивает
-    // Тёмно-красный заливает экран красными субпикселями, блокируя синий и зелёный
-    
+    // Безопасный экран — тёмно-красный
+    // LCD "чёрный" всё равно пропускает белую подсветку (содержит синий/зелёный)
+    // Тёмно-красный: красные субпиксели включены, синие/зелёные выключены
+    // Фотобумага (обычная и мульти) нечувствительна к красному >600нм
     function drawSafeScreen() {
         const canvas = exposureCanvas;
         const ctx = exposureCtx;
         const dpr = window.devicePixelRatio || 1;
-    
+
         const screenW = window.innerWidth;
         const screenH = window.innerHeight;
-    
+
         canvas.width = screenW * dpr;
         canvas.height = screenH * dpr;
         canvas.style.width = screenW + 'px';
         canvas.style.height = screenH + 'px';
-    
-        // Тёмно-красный — безопасен для фотобумаги
-        // Значение 10-15 достаточно чтобы LCD включил красные субпиксели
-        // и погасил синие/зелёные, но не засвечивал бумагу
+
         ctx.fillStyle = '#0a0000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-
     // ============ EXPOSURE PROCESS ============
-
     function startExposure() {
         if (!state.imageLoaded) return;
         getAudioContext();
@@ -360,24 +370,37 @@
 
         state.phase = 'waiting';
         state.timeRemaining = state.waitTime;
+
         phaseIndicator.textContent = '● ПОДГОТОВКА';
         phaseIndicator.style.display = 'block';
+        phaseIndicator.style.color = '#330000';
         phaseIndicator.onclick = null;
 
-        // ★ ИСПРАВЛЕНО: во время ожидания — ЧЁРНЫЙ экран, не красный!
-        // Бумага уже лежит под телефоном, любой свет = засветка
-        drawBlackScreen();
-        document.body.style.background = '#000';
+        // Безопасный красный экран во время ожидания
+        drawSafeScreen();
+        document.body.style.background = '#0a0000';
 
         requestWakeLock();
 
         state.timer = setInterval(() => {
             state.timeRemaining -= 0.1;
 
-            if (state.phase === 'waiting' && state.timeRemaining <= 0) {
-                beginExposing();
-            } else if (state.phase === 'exposing' && state.timeRemaining <= 0) {
-                finishExposure();
+            if (state.phase === 'waiting') {
+                // Обновляем обратный отсчёт подготовки
+                const sec = Math.max(0, Math.ceil(state.timeRemaining));
+                phaseIndicator.textContent = '● ПОДГОТОВКА ' + sec;
+
+                if (state.timeRemaining <= 0) {
+                    beginExposing();
+                }
+            } else if (state.phase === 'exposing') {
+                // Обновляем обратный отсчёт экспозиции
+                const sec = Math.max(0, Math.ceil(state.timeRemaining));
+                phaseIndicator.textContent = '● ЭКСПОЗИЦИЯ ' + sec;
+
+                if (state.timeRemaining <= 0) {
+                    finishExposure();
+                }
             }
         }, 100);
     }
@@ -387,12 +410,15 @@
         state.timeRemaining = state.exposureTime;
         playStartBeep();
 
-        // Рисуем негатив — это единственный момент когда экран светит
+        // Показываем негатив — единственный момент когда экран реально светит
         const neg = getActiveNegative();
         drawExposureImage(neg);
 
-        document.body.style.background = '#000';
-        phaseIndicator.style.display = 'none';
+        document.body.style.background = '#000000';
+
+        phaseIndicator.style.display = 'block';
+        phaseIndicator.style.color = '#ffffff';
+        phaseIndicator.textContent = '● ЭКСПОЗИЦИЯ';
     }
 
     function finishExposure() {
@@ -401,14 +427,13 @@
         state.timer = null;
         playEndBeep();
 
-        // ★ ИСПРАВЛЕНО: после экспонирования — ЧЁРНЫЙ экран, не красный!
-        // Бумага всё ещё под телефоном, красный свет = дополнительная засветка
-        drawBlackScreen();
-        document.body.style.background = '#000';
+        // Безопасный красный экран после экспозиции
+        drawSafeScreen();
+        document.body.style.background = '#0a0000';
 
-        phaseIndicator.textContent = '● ГОТОВО — НАЖМИТЕ ДЛЯ ВЫХОДА';
+        phaseIndicator.textContent = '● ГОТОВО — НАЖМИТЕ';
         phaseIndicator.style.display = 'block';
-        phaseIndicator.style.color = '#00ff00';  // зелёный текст на чёрном фоне
+        phaseIndicator.style.color = '#330000';
         phaseIndicator.onclick = stopExposure;
     }
 
@@ -416,11 +441,14 @@
         clearInterval(state.timer);
         state.timer = null;
         state.phase = 'idle';
+
         document.body.style.background = '#0a0a0a';
         exposureScreen.classList.remove('active');
         mainScreen.classList.add('active');
+
         phaseIndicator.onclick = null;
-        phaseIndicator.style.color = '';  // сброс цвета
+        phaseIndicator.style.color = '';
+
         releaseWakeLock();
         exitFullscreen();
     }
@@ -428,15 +456,13 @@
     // ============ RESIZE ============
     function handleResize() {
         if (state.phase === 'waiting' || state.phase === 'finished') {
-            // ★ ИСПРАВЛЕНО: при ожидании/завершении — чёрный
-            drawBlackScreen();
+            drawSafeScreen();
         } else if (state.phase === 'exposing') {
             drawExposureImage(getActiveNegative());
         }
     }
 
-    // ============ TOGGLE OPTIONS ============
-
+    // ============ OPTIONS ============
     function loadOptions() {
         try {
             state.bwMode = localStorage.getItem('cp_bw') === 'true';
@@ -468,7 +494,6 @@
     }
 
     // ============ INIT ============
-
     function init() {
         loadPresets();
         loadOptions();
@@ -497,32 +522,44 @@
         optionBW.addEventListener('click', toggleBW);
         optionFill.addEventListener('click', toggleFill);
 
-        // Время — кнопки
-        document.querySelectorAll('.btn-time').forEach(btn => {
+        // Время — кнопки ±
+        document.querySelectorAll('.btn-time').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const delta = parseFloat(btn.dataset.delta);
-                state.exposureTime = Math.max(0.5, Math.min(600,
-                    Math.round((state.exposureTime + delta) * 10) / 10
-                ));
+                state.exposureTime = Math.max(
+                    0.5,
+                    Math.min(600, Math.round((state.exposureTime + delta) * 10) / 10)
+                );
                 updateTimeDisplay();
             });
         });
 
-        // Слайдер
+        // Слайдер времени
         timeSlider.addEventListener('input', (e) => {
             state.exposureTime = parseFloat(e.target.value);
             updateTimeDisplay();
         });
 
-        // Старт
+        // Старт экспозиции
         btnStart.addEventListener('click', startExposure);
 
-        // ★ ИСПРАВЛЕНО: тап по всему экрану экспонирования для остановки
-        // (вместо отдельной кнопки stop)
-        exposureScreen.addEventListener('click', function(e) {
-            if (e.target === phaseIndicator) return;
+        // Тап по экрану экспонирования — стоп
+        exposureScreen.addEventListener('click', function (e) {
+            // Если нажали на индикатор «ГОТОВО» — он сам обработает через onclick
+            if (e.target === phaseIndicator && phaseIndicator.onclick) return;
             if (state.phase === 'idle') return;
-            stopExposure();
+            // Во время экспозиции — аварийная остановка
+            if (state.phase === 'exposing') {
+                stopExposure();
+            }
+            // Во время ожидания — отмена
+            if (state.phase === 'waiting') {
+                stopExposure();
+            }
+            // После завершения — выход
+            if (state.phase === 'finished') {
+                stopExposure();
+            }
         });
 
         // Пресеты
@@ -530,27 +567,39 @@
             renderPresets();
             presetModal.classList.add('active');
         });
+
         btnClosePresets.addEventListener('click', () => {
             presetModal.classList.remove('active');
             presetForm.style.display = 'none';
         });
+
         btnSavePreset.addEventListener('click', () => {
             presetNameInput.value = '';
             presetForm.style.display = 'flex';
             presetNameInput.focus();
         });
+
         btnConfirmPreset.addEventListener('click', () => {
             const name = presetNameInput.value.trim();
-            if (!name) { presetNameInput.style.borderColor = 'red'; return; }
-            state.presets.push({ id: generateId(), name, time: state.exposureTime });
+            if (!name) {
+                presetNameInput.style.borderColor = 'red';
+                return;
+            }
+            state.presets.push({
+                id: generateId(),
+                name: name,
+                time: state.exposureTime,
+            });
             savePresets();
             renderPresets();
             presetForm.style.display = 'none';
             presetNameInput.style.borderColor = '';
         });
+
         btnCancelPreset.addEventListener('click', () => {
             presetForm.style.display = 'none';
         });
+
         presetModal.addEventListener('click', (e) => {
             if (e.target === presetModal) {
                 presetModal.classList.remove('active');
@@ -571,6 +620,7 @@
         }
     }
 
+    // Запуск
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
