@@ -1,6 +1,6 @@
 // ============================================================
 // CONTACT PRINT — PWA для контактной фотопечати
-// v5: Убран текст таймера во время экспонирования
+// v6: Исправлен звук на iPad/iOS
 // ============================================================
 
 (function () {
@@ -62,13 +62,25 @@
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
         return audioCtx;
+    }
+
+    function unlockAudio() {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
     }
 
     function playTone(frequency, duration) {
         try {
             const ctx = getAudioContext();
+            if (ctx.state === 'suspended') ctx.resume();
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = 'sine';
@@ -231,7 +243,6 @@
 
         const original = ctx.getImageData(0, 0, w, h);
 
-        // Цветной негатив
         const invColor = new ImageData(new Uint8ClampedArray(original.data), w, h);
         for (let i = 0; i < invColor.data.length; i += 4) {
             invColor.data[i] = 255 - invColor.data[i];
@@ -239,7 +250,6 @@
             invColor.data[i + 2] = 255 - invColor.data[i + 2];
         }
 
-        // Ч/Б негатив
         const invBW = new ImageData(new Uint8ClampedArray(original.data), w, h);
         for (let i = 0; i < invBW.data.length; i += 4) {
             const lum = Math.round(
@@ -252,7 +262,6 @@
             invBW.data[i + 2] = lum;
         }
 
-        // Красный негатив для превью — очень тусклый (3%)
         const red = new ImageData(new Uint8ClampedArray(original.data), w, h);
         for (let i = 0; i < red.data.length; i += 4) {
             const lum =
@@ -357,7 +366,10 @@
     // ============ EXPOSURE PROCESS ============
     function startExposure() {
         if (!state.imageLoaded) return;
-        getAudioContext();
+
+        // Разблокируем звук — именно из обработчика клика
+        unlockAudio();
+
         tryFullscreen();
 
         mainScreen.classList.remove('active');
@@ -404,7 +416,6 @@
 
         document.body.style.background = '#000000';
 
-        // Скрываем индикатор — никакого текста поверх негатива
         phaseIndicator.style.display = 'none';
         phaseIndicator.onclick = null;
     }
@@ -575,6 +586,12 @@
                 presetForm.style.display = 'none';
             }
         });
+
+        // Разблокируем аудио при любом первом тапе на странице
+        document.addEventListener('touchstart', function firstTouch() {
+            unlockAudio();
+            document.removeEventListener('touchstart', firstTouch);
+        }, { once: true });
 
         window.addEventListener('resize', () => {
             if (state.phase !== 'idle') handleResize();
