@@ -1,6 +1,6 @@
 // ============================================================
 // CONTACT PRINT — PWA для контактной фотопечати
-// v4: Безопасный красный экран вместо чёрного
+// v5: Убран текст таймера во время экспонирования
 // ============================================================
 
 (function () {
@@ -312,7 +312,6 @@
         canvas.style.width = screenW + 'px';
         canvas.style.height = screenH + 'px';
 
-        // Фон вокруг изображения — безопасный красный
         ctx.fillStyle = '#0a0000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -338,10 +337,6 @@
         ctx.drawImage(tmpCanvas, offsetX, offsetY, drawW, drawH);
     }
 
-    // Безопасный экран — тёмно-красный
-    // LCD "чёрный" всё равно пропускает белую подсветку (содержит синий/зелёный)
-    // Тёмно-красный: красные субпиксели включены, синие/зелёные выключены
-    // Фотобумага (обычная и мульти) нечувствительна к красному >600нм
     function drawSafeScreen() {
         const canvas = exposureCanvas;
         const ctx = exposureCtx;
@@ -376,7 +371,6 @@
         phaseIndicator.style.color = '#330000';
         phaseIndicator.onclick = null;
 
-        // Безопасный красный экран во время ожидания
         drawSafeScreen();
         document.body.style.background = '#0a0000';
 
@@ -386,7 +380,6 @@
             state.timeRemaining -= 0.1;
 
             if (state.phase === 'waiting') {
-                // Обновляем обратный отсчёт подготовки
                 const sec = Math.max(0, Math.ceil(state.timeRemaining));
                 phaseIndicator.textContent = '● ПОДГОТОВКА ' + sec;
 
@@ -394,10 +387,6 @@
                     beginExposing();
                 }
             } else if (state.phase === 'exposing') {
-                // Обновляем обратный отсчёт экспозиции
-                const sec = Math.max(0, Math.ceil(state.timeRemaining));
-                phaseIndicator.textContent = '● ЭКСПОЗИЦИЯ ' + sec;
-
                 if (state.timeRemaining <= 0) {
                     finishExposure();
                 }
@@ -410,15 +399,14 @@
         state.timeRemaining = state.exposureTime;
         playStartBeep();
 
-        // Показываем негатив — единственный момент когда экран реально светит
         const neg = getActiveNegative();
         drawExposureImage(neg);
 
         document.body.style.background = '#000000';
 
-        phaseIndicator.style.display = 'block';
-        phaseIndicator.style.color = '#ffffff';
-        phaseIndicator.textContent = '● ЭКСПОЗИЦИЯ';
+        // Скрываем индикатор — никакого текста поверх негатива
+        phaseIndicator.style.display = 'none';
+        phaseIndicator.onclick = null;
     }
 
     function finishExposure() {
@@ -427,7 +415,6 @@
         state.timer = null;
         playEndBeep();
 
-        // Безопасный красный экран после экспозиции
         drawSafeScreen();
         document.body.style.background = '#0a0000';
 
@@ -448,6 +435,7 @@
 
         phaseIndicator.onclick = null;
         phaseIndicator.style.color = '';
+        phaseIndicator.style.display = 'none';
 
         releaseWakeLock();
         exitFullscreen();
@@ -498,7 +486,6 @@
         loadPresets();
         loadOptions();
 
-        // Загрузка фото
         btnLoadPhoto.addEventListener('click', () => fileInput.click());
         $('#previewContainer').addEventListener('click', () => fileInput.click());
 
@@ -518,11 +505,9 @@
             fileInput.value = '';
         });
 
-        // Опции
         optionBW.addEventListener('click', toggleBW);
         optionFill.addEventListener('click', toggleFill);
 
-        // Время — кнопки ±
         document.querySelectorAll('.btn-time').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const delta = parseFloat(btn.dataset.delta);
@@ -534,35 +519,19 @@
             });
         });
 
-        // Слайдер времени
         timeSlider.addEventListener('input', (e) => {
             state.exposureTime = parseFloat(e.target.value);
             updateTimeDisplay();
         });
 
-        // Старт экспозиции
         btnStart.addEventListener('click', startExposure);
 
-        // Тап по экрану экспонирования — стоп
         exposureScreen.addEventListener('click', function (e) {
-            // Если нажали на индикатор «ГОТОВО» — он сам обработает через onclick
             if (e.target === phaseIndicator && phaseIndicator.onclick) return;
             if (state.phase === 'idle') return;
-            // Во время экспозиции — аварийная остановка
-            if (state.phase === 'exposing') {
-                stopExposure();
-            }
-            // Во время ожидания — отмена
-            if (state.phase === 'waiting') {
-                stopExposure();
-            }
-            // После завершения — выход
-            if (state.phase === 'finished') {
-                stopExposure();
-            }
+            stopExposure();
         });
 
-        // Пресеты
         btnPresets.addEventListener('click', () => {
             renderPresets();
             presetModal.classList.add('active');
@@ -607,20 +576,17 @@
             }
         });
 
-        // Ресайз
         window.addEventListener('resize', () => {
             if (state.phase !== 'idle') handleResize();
         });
 
         updateTimeDisplay();
 
-        // Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
         }
     }
 
-    // Запуск
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
